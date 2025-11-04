@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Freddy's Dnd: Characters</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon-32x32.png">
+    <link rel="stylesheet" href="/React/Characters/index-CharactersFinal.css">
+</head>
+<body>
+
+<script th:inline="javascript">
+    window.appData = {
+        username: /*[[${username}]]*/ "",
+        imageurl: /*[[${imageurl}]]*/ "",
+        characters: /*[[${characters}]]*/ [],
+        skillsMap: /*[[${skillsMap}]]*/ {},
+        savingThrowsMap: /*[[${saving_throws_map}]]*/ {},
+        featuresMap: /*[[${features_map}]]*/ {},
+        spellsMap: /*[[${spells_map}]]*/ {},
+        weaponsMap: /*[[${weapons_map}]]*/ {},
+        armorsMap: /*[[${armors_map}]]*/ {},
+        shieldsMap: /*[[${shields_map}]]*/ {},
+        charactersNotes: /*[[${characters_notes_maps}]]*/ {},
+        currencyMap: /*[[${currency_map}]]*/ {}
+    };
+</script>
+
+<div id="root"></div>
+
+<script defer src="/React/Characters/index-CharactersFinal.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Freddy's DnD: Login</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon-32x32.png">
+  <link rel="stylesheet" href="/React/Login/index-LoginFinal.css">
+  <script defer src="/React/Login/index-LoginFinal.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<div>
+  <div class="message" th:if="${param.error}">
+    Invalid Username or Password!
+  </div>
+  <div class="message" th:if="${param.logout}">
+    Successfull Logout!
+  </div>
+
+  <form id="thymeleaf-login-form"
+        th:action="@{/login}"
+        method="POST"
+        role="form">
+    <input type="hidden" id="hidden-username" name="username">
+    <input type="hidden" id="hidden-password" name="password">
+  </form>
+</div>
+</body>
+</html>

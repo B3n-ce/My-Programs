@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <title>Freddy's Dnd: Interactive Map</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon-32x32.png">
+    <link rel="stylesheet" href="/css/map.css">
+</head>
+<body>
+
+<div id="topbar">
+    <a class="topbar-btn" href="/campaigns" aria-label="Back to Campaigns">< Back to Campaigns</a>
+</div>
+
+<div id="toolbar">
+    <div class="tool-item" data-type="Bagraban" title="Bagraban token">
+        <img src="DND_Characters_And_Tokens/Bagraban.png" alt="Bagraban" />
+    </div>
+    <div class="tool-item" data-type="eagle" title="Eagle token">
+        <img src="DND_Characters_And_Tokens/eagle.png" alt="Eagle" />
+    </div>
+    <div class="tool-item" data-type="fox" title="Fox token">
+        <img src="DND_Characters_And_Tokens/fox.png" alt="Fox" />
+    </div>
+    <div class="tool-item" data-type="hermelin" title="Hermelin token">
+        <img src="DND_Characters_And_Tokens/hermelin.png" alt="Hermelin" />
+    </div>
+    <div class="tool-item" data-type="Kelven" title="Kelven token">
+        <img src="DND_Characters_And_Tokens/Kelven.png" alt="Kelven" />
+    </div>
+    <div class="tool-item" data-type="Nabalo" title="Nabalo token">
+        <img src="DND_Characters_And_Tokens/Nabalo.png" alt="Nabalo" />
+    </div>
+    <div class="tool-item" data-type="Tartarus" title="Tartarus token">
+        <img src="DND_Characters_And_Tokens/Tartarus.png" alt="Tartarus" />
+    </div>
+    <div class="tool-item" data-type="Thalia" title="Thalia token">
+        <img src="DND_Characters_And_Tokens/Thalia.png" alt="Thalia" />
+    </div>
+    <div class="tool-item" data-type="Tobo" title="Tobo token">
+        <img src="DND_Characters_And_Tokens/Tobo.png" alt="Tobo" />
+    </div>
+    <div class="tool-item" data-type="Tobo" title="Tobo token">
+        <img src="DND_Characters_And_Tokens/Tobo.png" alt="Tobo" />
+    </div>
+    <div class="tool-item" data-type="Tobo" title="Tobo token">
+        <img src="DND_Characters_And_Tokens/Tobo.png" alt="Tobo" />
+    </div>
+</div>
+
+<div id="map-container">
+    <div id="map"></div>
+</div>
+
+<div id="chat-container">
+    <div id="login-form">
+        <input type="text" id="username" th:value="${username}" readonly />
+        <input type="text" id="roomId" placeholder="Room ID" />
+        <button id="connect-btn">Connect</button>
+    </div>
+    <div id="messages"></div>
+    <form id="message-form">
+        <input type="text" id="message-input" autocomplete="off" placeholder="Send a message..." />
+        <button type="submit" id="send-btn">Send</button>
+    </form>
+</div>
+
+<div id="context-menu" style="position:absolute; display:none; background:#333; color:#fff; padding:8px; border-radius:4px; z-index:1000;">
+    <div id="context-menu-delete" style="cursor:pointer;">Delete</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<button id="saveMapBtn">Map Save</button>
+
+<script>
+    const GRID_SIZE = 40;
+    function snap(n) { return Math.round(n / GRID_SIZE) * GRID_SIZE; }
+
+    let mutedUsers = new Set();
+    let operators = new Set();
+    let stompClient = null;
+    let username = null;
+    let roomId = null;
+    const map = document.getElementById('map');
+    const messagesEl = document.getElementById('messages');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    const connectBtn = document.getElementById('connect-btn');
+    const toolbar = document.getElementById('toolbar');
+    let selectedTool = null;
+    let adminName = null;
+
+    const mapObjects = new Map();
+
+    let myUsername = null;
+    let currentRoomId = null;
+
+    connectBtn.onclick = () => {
+        username = document.getElementById('username').value.trim();
+        roomId = document.getElementById('roomId').value.trim();
+
+        if (!username || !roomId) {
+            alert('Enter your username and room ID!');
+            return;
+        }
+
+        myUsername = username;
+        currentRoomId = roomId;
+
+        window.currentUsername = username;
+
+        connectWebSocket();
+    };
+
+    window.addEventListener("beforeunload", () => {
+    if (username && roomId) {
+        const data = JSON.stringify({
+            sender: username,
+            roomId: roomId
+        });
+
+        const blob = new Blob([data], { type: "application/json" });
+
+        navigator.sendBeacon("/chat/leave", blob);
+        }
+    });
+
+    toolbar.querySelectorAll('.tool-item').forEach(item => {
+        item.onclick = () => {
+            toolbar.querySelectorAll('.tool-item').forEach(i => i.classList.remove('selected'));
+            if (selectedTool === item.dataset.type) {
+                selectedTool = null;
+                map.style.cursor = 'crosshair';
+            } else {
+                selectedTool = item.dataset.type;
+                item.classList.add('selected');
+                map.style.cursor = 'copy';
+            }
+        };
+    });
+
+    map.onclick = e => {
+        if (!selectedTool || !stompClient || !stompClient.connected) return;
+
+        const rect = map.getBoundingClientRect();
+        let { x, y } = clientToMap(e);
+        x = snap(x);
+        y = snap(y);
+
+        const newId = 'token-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+
+        const newTokenMsg = {
+            roomId: roomId,
+            sender: username,
+            type: 'OBJECT_ADD',
+            objectId: newId,
+            objectType: selectedTool,
+            objectData: JSON.stringify({x: x, y: y})
+        };
+
+        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(newTokenMsg));
+    };
+
+    function connectWebSocket() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, frame => {
+
+            stompClient.send("/app/chat.addUser", {}, JSON.stringify({
+                roomId: roomId,
+                sender: username,
+                type: 'JOIN'
+            }));
+
+            stompClient.subscribe('/topic/' + roomId, onMessageReceived);
+
+            document.getElementById('login-form').style.display = 'none';
+            messageForm.style.display = 'flex';
+        }, error => {
+            logSystemMessage('Connection error: ' + error);
+        });
+    }
+
+    function onMessageReceived(payload) {
+    const message = JSON.parse(payload.body);
+    switch (message.type) {
+        case 'MAP_STATE':
+            message.mapState.forEach(token => {
+                const data = typeof token.objectData === 'string' ? JSON.parse(token.objectData) : token.objectData;
+                if (!mapObjects.has(token.objectId)) {
+                    addMapObject({
+                        objectId: token.objectId,
+                        objectType: token.objectType,
+                        objectData: JSON.stringify(data),
+                        sender: token.sender || ''
+                    });
+                } else {
+                    moveMapObject({
+                        objectId: token.objectId,
+                        objectData: JSON.stringify(data)
+                    });
+                }
+            });
+
+            console.log('Map position updated:', mapObjects);
+            break;
+        case 'MUTE_LIST':
+            mutedUsers = new Set(message.mutedUsers);
+            console.log('Mute list updated:', message.mutedUsers);
+            break;
+        case 'ALERT':
+            if (message.content === "MAPS_NUMBER") {
+                showWarn("You cannot save more maps! (Limit: 5)");
+            }
+            else if (message.content === "MAP_UPDATE")
+            {
+                showInfo("Map updated!");
+            }
+            else if (message.content === "MAP_CREATE")
+            {
+                showInfo("Map saved!");
+            }
+            else if (message.content === "MAP_CHOOSE") {
+                const allMapsState = message.allMapState;
+
+                let existingPopup = document.getElementById("mapPopup");
+                if (existingPopup) existingPopup.remove();
+
+                const popup = document.createElement("div");
+                popup.id = "mapPopup";
+                popup.style.position = "fixed";
+                popup.style.top = "50%";
+                popup.style.left = "50%";
+                popup.style.transform = "translate(-50%, -50%)";
+                popup.style.backgroundColor = "white";
+                popup.style.border = "2px solid black";
+                popup.style.padding = "20px";
+                popup.style.zIndex = 1000;
+
+                const title = document.createElement("h3");
+                title.textContent = "Selectable maps:";
+                popup.appendChild(title);
+
+                for (let mapName in allMapsState) {
+                    const btn = document.createElement("button");
+                    btn.textContent = mapName;
+                    btn.style.display = "block";
+                    btn.style.margin = "5px 0";
+
+                    btn.onclick = () => {
+                        console.log("Selected map:", mapName);
+
+                        const mapState = allMapsState[mapName];
+                        mapState.forEach(token => {
+                            const data = typeof token.objectData === 'string' ? JSON.parse(token.objectData) : token.objectData;
+                            if (!mapObjects.has(token.objectId)) {
+                                addMapObject({
+                                    objectId: token.objectId,
+                                    objectType: token.objectType,
+                                    objectData: JSON.stringify(data),
+                                    sender: token.sender || ''
+                                });
+                            } else {
+                                moveMapObject({
+                                    objectId: token.objectId,
+                                    objectData: JSON.stringify(data)
+                                });
+                            }
+                        });
+
+                        popup.remove();
+                    };
+
+                    popup.appendChild(btn);
+                }
+
+                const closeBtn = document.createElement("button");
+                closeBtn.textContent = "New map";
+                closeBtn.style.display = "block";
+                closeBtn.style.marginTop = "10px";
+                closeBtn.onclick = () => popup.remove();
+                popup.appendChild(closeBtn);
+
+                document.body.appendChild(popup);
+            }
+            break;
+        case 'OPERATOR_LIST':
+            adminName = message.adminName;
+            operators = new Set(message.operators);
+            console.log('Operator list updated:', message.operators);
+            updateSaveButtonVisibility();
+            break;
+        case 'ROOM_CLOSED':
+            if (message.type === "ROOM_CLOSED" && message.roomId === roomId) {
+                alert("The Admin closed the room!");
+                stompClient.disconnect();
+                disableChatInput();
+            }
+            break;
+        case 'CHAT':
+            if (message.content.includes("SYSTEM-MUTE")) {
+                const target = message.targetUser;
+                logSystemMessage(target + " has been muted.");
+                return;
+            }
+            if (message.content.includes("SYSTEM-UNMUTE")) {
+                const target = message.targetUser;
+                logSystemMessage(target + " has been unmuted.");
+                return;
+            }
+
+            if (isUserMuted(message.sender)) {
+                return;
+            }
+            logMessage(message.sender, message.content);
+            break;
+        case 'JOIN':
+            logSystemMessage(`${message.sender} connected to the room.`);
+            break;
+        case 'LEAVE':
+            if (message.content === "KICKED" && message.sender === window.currentUsername) {
+                alert("You've been kicked out of the room!");
+                stompClient.disconnect();
+                disableChatInput();
+            } else {
+                logSystemMessage(`${message.sender} left the room.`);
+            }
+            break;
+        case 'OBJECT_ADD':
+            addMapObject(message);
+            break;
+        case 'OBJECT_MOVE':
+            moveMapObject(message);
+            break;
+        case 'OBJECT_REMOVE':
+            removeMapObject(message);
+            break;
+        case 'ADMIN_ACTION':
+            handleAdminAction(message);
+            break;
+        case 'MUTE':
+            console.log('MUTE message received:', message);
+			if (message.targetUser === window.currentUsername) {
+				if (message.content === "MUTE") {
+					setUserMuted(true);
+				} else if (message.content === "Unmuted") {
+					setUserMuted(false);
+				}
+			}
+			break;
+        default:
+            console.warn('Unknown message type:', message.type);
+		}
+		}
+
+		function removeRoomFromUI(roomId) {
+            const roomElement = document.getElementById('room-' + roomId);
+            if (roomElement) {
+                roomElement.remove();
+            }
+        }
+
+
+		function isUserMuted(username) {
+			return mutedUsers.has(username);
+		}
+
+		function setUserMuted(muted) {
+			if (muted) {
+				disableChatInput();
+			} else {
+				enableChatInput();
+			}
+		}
+		
+		function disableChatInput() {
+        const input = document.getElementById('chatInput');
+        if (input) {
+            input.placeholder = "You are muted, you cannot write.";
+            input.disabled = true;
+            }
+        }
+
+        function enableChatInput() {
+            const input = document.getElementById('chatInput');
+            if (input) {
+                input.placeholder = "Write a message...";
+                input.disabled = false;
+            }
+        }
+
+    function logMessage(sender, content) {
+        const p = document.createElement('p');
+
+        const senderSpan = document.createElement('span');
+        senderSpan.textContent = sender;
+        senderSpan.style.fontWeight = 'bold';
+        senderSpan.style.color = 'blue';
+        senderSpan.style.cursor = 'pointer';
+        senderSpan.title = 'Click on the username';
+
+
+        if (sender === adminName) {
+        senderSpan.style.color = 'red';
+        } else if (isUserMuted(sender)) {
+            senderSpan.style.color = 'gray';
+        } else if (operators.has(sender)) {
+            senderSpan.style.color = 'blue';
+        } else {
+            senderSpan.style.color = 'black';
+        }
+
+
+        senderSpan.onclick = (e) => {
+            e.stopPropagation();
+            showUserContextMenu(e.pageX, e.pageY, sender);
+        };
+
+        p.appendChild(senderSpan);
+        p.appendChild(document.createTextNode(`: ${content}`));
+
+        messagesEl.appendChild(p);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function logSystemMessage(text) {
+        const p = document.createElement('p');
+        p.style.fontStyle = 'italic';
+        p.style.color = '#888';
+        p.textContent = text;
+        messagesEl.appendChild(p);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    messageForm.onsubmit = e => {
+        e.preventDefault();
+        const content = messageInput.value.trim();
+        if (content && stompClient && stompClient.connected) {
+            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify({
+                roomId: roomId,
+                sender: username,
+                type: 'CHAT',
+                content: content
+            }));
+            messageInput.value = '';
+        }
+    };
+
+    function addMapObject(msg) {
+        if (mapObjects.has(msg.objectId)) return;
+
+        const {x, y} = JSON.parse(msg.objectData);
+        const token = document.createElement('div');
+        token.className = `token ${msg.objectType}`;
+        token.style.left = `${x}px`;
+        token.style.top = `${y}px`;
+        token.dataset.id = msg.objectId;
+        token.draggable = true;
+        const img = document.createElement('img');
+        img.src = `DND_Characters_And_Tokens/${msg.objectType}.png`;
+        img.alt = msg.objectType;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        token.appendChild(img);
+
+        map.appendChild(token);
+        mapObjects.set(msg.objectId, token);
+
+        token.ondragstart = ev => {
+            ev.dataTransfer.setData("text/plain", msg.objectId);
+        };
+
+        token.oncontextmenu = ev => {
+            ev.preventDefault();
+            showContextMenu(ev.pageX, ev.pageY, msg.objectId);
+        };
+
+        sendMapStateToBackend();
+    }
+
+    map.ondragover = e => e.preventDefault();
+
+    map.ondrop = e => {
+      e.preventDefault();
+      const objectId = e.dataTransfer.getData("text/plain");
+      const token = mapObjects.get(objectId);
+      if (!token) return;
+
+        let { x, y } = clientToMap(e);
+        x = snap(x);
+        y = snap(y);
+
+
+        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify({
+        roomId: roomId,
+        sender: username,
+        type: 'OBJECT_MOVE',
+        objectId: objectId,
+        objectData: JSON.stringify({ x, y })
+      }));
+
+      sendMapStateToBackend();
+    };
+
+    function moveMapObject(msg) {
+        const token = mapObjects.get(msg.objectId);
+        if (!token) return;
+        const {x, y} = JSON.parse(msg.objectData);
+        token.style.left = `${x}px`;
+        token.style.top = `${y}px`;
+
+        sendMapStateToBackend();
+    }
+
+    function removeMapObject(msg) {
+        const token = mapObjects.get(msg.objectId);
+        if (!token) return;
+        token.remove();
+        mapObjects.delete(msg.objectId);
+    }
+
+    function sendMapStateToBackend() {
+        const mapState = [];
+
+        mapObjects.forEach((token, objectId) => {
+            mapState.push({
+                objectId: objectId,
+                objectType: token.className.replace('token ', ''),
+                objectData: JSON.stringify({
+                    x: parseInt(token.style.left),
+                    y: parseInt(token.style.top)
+                })
+            });
+        });
+
+        stompClient.send("/app/chat.sendMapState", {}, JSON.stringify({
+            roomId: roomId,
+            sender: username,
+            mapState: mapState
+            }));
+    }
+
+    function saveMapStateToBackend() {
+        const SaveMapState = [];
+
+        mapObjects.forEach((token, objectId) => {
+            SaveMapState.push({
+                objectId: objectId,
+                objectType: token.className.replace('token ', ''),
+                objectData: JSON.stringify({
+                    x: parseInt(token.style.left),
+                    y: parseInt(token.style.top)
+                })
+            });
+        });
+
+        if (SaveMapState.length === 0) {
+            showWarn("Cannot save empty maps.");
+            return;
+        }
+
+        showPrompt({
+            title: "Map save",
+            message: "Enter the map name:",
+            placeholder: "E.g. Goblin Caves"
+        }).then((mapName) => {
+            if (!mapName) {
+                showError("The map name cannot be empty!");
+                return;
+            }
+
+            stompClient.send("/app/chat.saveMapState", {}, JSON.stringify({
+                roomId: roomId,
+                content: mapName,
+                mapState: SaveMapState
+            }));
+        });
+
+        showInfo("Saving in progress...");
+    }
+
+    const saveMapBtn = document.getElementById("saveMapBtn");
+    saveMapBtn.style.display = "none";
+
+    function updateSaveButtonVisibility() {
+        if (myUsername === adminName) {
+            saveMapBtn.style.display = "block";
+            saveMapBtn.onclick = () => saveMapStateToBackend();
+        } else {
+            saveMapBtn.style.display = "none";
+        }
+    }
+
+    const contextMenu = document.getElementById('context-menu');
+    let contextMenuTargetId = null;
+
+    function showContextMenu(x, y, objectId) {
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        contextMenu.style.display = 'block';
+        contextMenuTargetId = objectId;
+    }
+
+    document.addEventListener('click', () => {
+        contextMenu.style.display = 'none';
+        contextMenuTargetId = null;
+        hideUserContextMenu();
+    });
+
+    document.getElementById('context-menu-delete').onclick = () => {
+        if (contextMenuTargetId && stompClient && stompClient.connected) {
+            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify({
+                roomId: roomId,
+                sender: username,
+                type: 'OBJECT_REMOVE',
+                objectId: contextMenuTargetId
+            }));
+        }
+        contextMenu.style.display = 'none';
+    };
+
+    const userContextMenu = document.createElement('div');
+    userContextMenu.style.position = 'absolute';
+    userContextMenu.style.display = 'none';
+    userContextMenu.style.background = '#333';
+    userContextMenu.style.color = '#fff';
+    userContextMenu.style.padding = '8px';
+    userContextMenu.style.borderRadius = '4px';
+    userContextMenu.style.zIndex = '1001';
+    document.body.appendChild(userContextMenu);
+
+    let userContextMenuTarget = null;
+
+    const adminActions = [
+        { action: 'KICK', label: 'Kick' },
+        { action: 'MUTE', label: 'Mute' },
+        { action: 'UNMUTED', label: 'UNMUTE' },
+        { action: 'ADD_OPERATOR', label: 'Add operator' },
+        { action: 'NO_OPERATOR', label: 'No operator' }
+    ];
+
+    function showUserContextMenu(x, y, targetUsername) {
+    userContextMenuTarget = targetUsername;
+
+    userContextMenu.style.left = `${x}px`;
+    userContextMenu.style.top = `${y}px`;
+    userContextMenu.style.display = 'block';
+    userContextMenu.innerHTML = '';
+
+    adminActions.forEach(({action, label}) => {
+        userContextMenu.style.display = 'block';
+
+        console.log('myUsername:', myUsername);
+        console.log('adminName:', adminName);
+
+        if (myUsername === adminName && targetUsername === myUsername) {
+            userContextMenu.innerHTML = '';
+            const div = document.createElement('div');
+            div.textContent = 'You are the admin';
+            div.style.padding = '4px 8px';
+            userContextMenu.appendChild(div);
+            return;
+        }
+
+        if (myUsername !== adminName) {
+        userContextMenu.style.display = 'none';
+        return;
+        }
+
+        if (action === 'MUTE' && isUserMuted(targetUsername)) {
+            return;
+        }
+        if (action === 'UNMUTED' && !isUserMuted(targetUsername)) {
+            return;
+        }
+
+        if (action === 'ADD_OPERATOR' && operators.has(targetUsername)) {
+            return;
+        }
+        if (action === 'NO_OPERATOR' && !operators.has(targetUsername)) {
+            return;
+        }
+
+        const div = document.createElement('div');
+        div.textContent = label;
+        div.style.cursor = 'pointer';
+        div.style.padding = '4px 8px';
+
+        div.onmouseenter = () => div.style.background = '#555';
+        div.onmouseleave = () => div.style.background = 'transparent';
+
+        div.onclick = () => {
+            sendAdminAction(action, targetUsername);
+            hideUserContextMenu();
+        };
+
+        userContextMenu.appendChild(div);
+        });
+    }
+
+    function hideUserContextMenu() {
+        userContextMenu.style.display = 'none';
+        userContextMenuTarget = null;
+    }
+
+    function sendAdminAction(action, targetUser) {
+        if (!stompClient || !stompClient.connected) {
+            alert('Nincs kapcsolat a szerverrel!');
+            return;
+        }
+
+        const adminMessage = {
+            type: 'ADMIN_ACTION',
+            adminAction: action,
+            targetUser: targetUser,
+            sender: myUsername,
+            roomId: currentRoomId
+        };
+
+        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(adminMessage));
+    }
+
+    function handleAdminAction(msg) {
+        logSystemMessage(`Admin action: ${msg.sender} did a(n) '${msg.adminAction}' operation on ${msg.targetUser} user.`);
+    }
+
+
+    const container = document.getElementById('map-container');
+
+    let scale = 1;
+    const minScale = 0.5;
+    const maxScale = 3;
+
+    let offsetX = 0, offsetY = 0;
+    let isPanning = false;
+    let isTokenDragging = false;
+    let panStartX = 0, panStartY = 0;
+
+    const TOKEN_SIZE = 40;
+    map.style.transformOrigin = '0 0';
+
+    function updateTransform() {
+      map.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    }
+
+    function clientToMap(e) {
+      const crect = container.getBoundingClientRect();
+      const px = e.clientX - crect.left;
+      const py = e.clientY - crect.top;
+      return {
+        x: (px - offsetX) / scale,
+        y: (py - offsetY) / scale
+      };
+    }
+
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const crect = container.getBoundingClientRect();
+      const px = e.clientX - crect.left;
+      const py = e.clientY - crect.top;
+
+      const worldX = (px - offsetX) / scale;
+      const worldY = (py - offsetY) / scale;
+
+      const delta = -e.deltaY * 0.001;
+      const newScale = Math.min(Math.max(scale + delta, minScale), maxScale);
+
+      scale = newScale;
+      offsetX = px - worldX * scale;
+      offsetY = py - worldY * scale;
+
+      updateTransform();
+    }, { passive: false });
+
+    container.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.token')) return;
+      isPanning = true;
+      panStartX = e.clientX - offsetX;
+      panStartY = e.clientY - offsetY;
+      container.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      offsetX = e.clientX - panStartX;
+      offsetY = e.clientY - panStartY;
+      updateTransform();
+    });
+
+    document.addEventListener('mouseup', () => {
+      isPanning = false;
+      container.style.cursor = 'default';
+    });
+</script>
+
+<script>
+    function showToast(message, type = "success") {
+        const box = document.createElement("div");
+        box.className = `toast ${type}`;
+        box.textContent = message;
+        document.getElementById("toast-container").appendChild(box);
+        setTimeout(() => box.remove(), 4000);
+    }
+
+    function showPrompt({ title = "Confirm", message = "", placeholder = "" } = {}) {
+        return new Promise((resolve) => {
+            const root = document.getElementById("ui-modal");
+            const titleEl = document.getElementById("ui-modal-title");
+            const msgEl = document.getElementById("ui-modal-message");
+            const inputWrap = document.getElementById("ui-modal-input-wrap");
+            const inputEl = document.getElementById("ui-modal-input");
+            const btnCancel = document.getElementById("ui-modal-cancel");
+            const btnOk = document.getElementById("ui-modal-ok");
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+            inputWrap.hidden = false;
+            inputEl.value = "";
+            inputEl.placeholder = placeholder || "";
+            root.hidden = false;
+
+            function close(result) {
+                root.hidden = true;
+                inputWrap.hidden = false;
+                resolve(result);
+            }
+            const onKey = (e) => {
+                if (e.key === "Escape") close(null);
+                if (e.key === "Enter") close(inputEl.value.trim());
+            };
+
+            btnCancel.onclick = () => close(null);
+            btnOk.onclick = () => close(inputEl.value.trim());
+            inputEl.onkeydown = onKey;
+            document.addEventListener("keydown", onKey, { once: true });
+
+            setTimeout(() => inputEl.focus(), 0);
+        });
+    }
+
+    function showInfo(message) { showToast(message, "success"); }
+    function showWarn(message) { showToast(message, "warn"); }
+    function showError(message) { showToast(message, "error"); }
+</script>
+
+
+<div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<div id="ui-modal" class="ui-modal" hidden>
+    <div class="ui-modal-backdrop"></div>
+    <div class="ui-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="ui-modal-title">
+        <h3 id="ui-modal-title" class="ui-modal-title">Title</h3>
+        <p id="ui-modal-message" class="ui-modal-message">Message…</p>
+        <div id="ui-modal-input-wrap" class="ui-modal-input-wrap" hidden>
+            <input id="ui-modal-input" type="text" placeholder="Type here…" />
+        </div>
+        <div class="ui-modal-actions">
+            <button id="ui-modal-cancel" class="btn ghost">Cancel</button>
+            <button id="ui-modal-ok" class="btn primary">OK</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

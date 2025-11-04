@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="hu" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <title>Freddy's DnD: Register</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon-32x32.png">
+  <link rel="stylesheet" href="/React/Register/index-RegisterFinal.css">
+  <script defer src="/React/Register/index-RegisterFinal.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<div>
+  <div class="message" th:if="${message != null}">
+    [[${message}]]
+  </div>
+  <form id="thymeleaf-form"
+        th:action="@{/registration}"
+        method="POST"
+        role="form"
+        th:object="${user}">
+
+    <input type="hidden" th:field="*{name}" id="hidden-name" name="name">
+    <input type="hidden" th:field="*{email}" id="hidden-email" name="email">
+    <input type="hidden" th:field="*{password}" id="hidden-password" name="password">
+  </form>
+</div>
+</body>
+</html>

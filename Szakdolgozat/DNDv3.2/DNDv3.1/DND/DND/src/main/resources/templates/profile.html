@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Freddy's DnD: Profile</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon-32x32.png">
+    <link rel="stylesheet" href="/React/Profile/index-ProfileFinal.css">
+    <script defer src="/React/Profile/index-ProfileFinal.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.profileData = {
+            username: /*[[${username}]]*/ "Username",
+            email: /*[[${email}]]*/ "nincs@email.hu"
+        };
+        /*]]>*/
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
+
+

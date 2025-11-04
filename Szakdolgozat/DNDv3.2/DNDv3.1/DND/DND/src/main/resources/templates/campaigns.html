@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <title>Freddy's DnD: Campaigns</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon-32x32.png">
+    <link rel="stylesheet" href="/React/Camapigns/index-CampaignsFinal.css">
+
+    <script th:inline="javascript">
+        window.__INITIAL_DATA__ = {
+            maps: /*[[${maps}]]*/ []
+        };
+    </script>
+</head>
+<body>
+
+<div id="root"></div>
+
+<noscript>
+    <a th:href="@{/room}">Create Room</a>
+    <div th:each="map : ${maps}" class="map-item">
+        <p><b>Map name:</b> <span th:text="${map.map_name}"></span></p>
+        <form th:action="@{/map_delete}" method="post">
+            <input type="hidden" name="id" th:value="${map.id}" />
+            <button type="submit">Delete</button>
+        </form>
+        <hr />
+    </div>
+</noscript>
+
+<script type="module" src="/React/Camapigns/index-CampaignsFinal.js"></script>
+</body>
+</html>

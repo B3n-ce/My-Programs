@@ -1,0 +1,393 @@
+/* ==============================
+   Alapok – oldal hangulat
+   ============================== */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Sitka', serif;
+    background-color: #1A221E;
+    color: whitesmoke;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+h1, h2, h4 {
+    color: #91bea8;
+    text-shadow: 1px 1px 2px #000;
+    margin: 16px auto 10px;
+    text-align: center;
+    font-weight: 700;
+}
+
+/* Központi konténer érzet az űrlapnak */
+form#character-form {
+    width: 100%;
+    max-width: 980px;
+    margin: 10px auto 40px;
+    padding: clamp(14px, 3vw, 24px);
+    background: #121515;
+    border: 1px solid #2a2e2b;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.4);
+}
+
+/* Sorok közti ritmus */
+label {
+    display: inline-block;
+    margin: 10px 8px 6px 0;
+    font-size: 16px;
+}
+
+/* Alap input stílus – összhangban a megadott témával */
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+    padding: 10px 12px;
+    font-size: 16px;
+    background: #222;
+    color: #fff;
+    border: 2px solid #670E0E;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease, transform .1s ease;
+}
+
+input[readonly] {
+    opacity: .85;
+    background: #1f1f1f;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #91bea8;
+    box-shadow: 0 0 0 2px rgba(145,190,168,.25);
+    background: #2b2b2b;
+}
+
+/* Sortörések helyett kis térköz */
+br {
+    line-height: 12px;
+}
+
+/* ==============================
+   Képválasztó (Character Image)
+   ============================== */
+
+.image-option {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 10px 0 20px;
+}
+
+.image-option label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 8px;
+    background: #141717;
+    transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.image-option label:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 8px 22px rgba(0,0,0,.35);
+    background: #181c1a;
+}
+
+.image-option img {
+    width: 100px;   /* nagyobb előnézet a korábbi 40px helyett */
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 3px solid transparent;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+}
+
+/* Rádió elrejtve, a kép jelzi a választást */
+input[type="radio"] {
+    display: none;
+}
+
+/* Kijelölt kép – zöld keret és glow, a témához igazítva */
+input[type="radio"]:checked + img {
+    border: 3px solid #91bea8;
+    box-shadow: 0 0 12px rgba(98,165,115,.7);
+    transform: scale(1.04);
+}
+
+/* ==============================
+   Szekciócímek és elválasztók
+   ============================== */
+
+h2 {
+    margin-top: 28px;
+    padding-top: 8px;
+    border-top: 2px solid #670E0E;
+}
+
+hr {
+    border: none;
+    height: 1px;
+    background: #333;
+    margin: 12px 0;
+}
+
+/* ==============================
+   Spells blokk
+   ============================== */
+
+#spells-container {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.spell-entry {
+    background: #101212;
+    border: 1px solid #2b2f2c;
+    border-left: 4px solid #520A0A;
+    border-radius: 10px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(120px, 1fr));
+    grid-auto-rows: auto;
+    gap: 10px;
+}
+
+.spell-entry textarea.spell-description {
+    grid-column: 1 / -1;
+    min-height: 90px;
+    resize: vertical;
+}
+
+#spells-container .spell-entry input,
+#spells-container .spell-entry textarea {
+    width: 100%;
+}
+
+button[type="button"] {
+    background: #91bea8;
+    color: #121515;
+    font-weight: 700;
+    border: 2px solid #2e6349;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background .2s ease, transform .12s ease, filter .2s ease;
+}
+
+button[type="button"]:hover {
+    background: #3b7458;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.spell-entry button[type="button"] {
+    justify-self: start;
+    background: #8b1c1c;
+    color: #fff;
+    border-color: #670E0E;
+}
+
+.spell-entry button[type="button"]:hover {
+    background: #a12828;
+}
+
+/* ==============================
+   Equipment (Weapons / Armors / Shields)
+   ============================== */
+
+#weapons-container,
+#armors-container,
+#shields-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 8px 0 14px;
+}
+
+.weapon-entry,
+.armor-entry,
+.shield-entry {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(140px, 1fr)) 44px;
+    gap: 10px;
+    align-items: center;
+    background: #111;
+    border: 1px solid #2a2e2b;
+    border-left: 4px solid #670E0E;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.weapon-entry input,
+.armor-entry input,
+.shield-entry input {
+    width: 100%;
+}
+
+.weapon-entry button,
+.armor-entry button,
+.shield-entry button {
+    width: 44px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #8b1c1c;
+    color: #fff;
+    border: 2px solid #670E0E;
+    border-radius: 8px;
+    font-size: 18px;
+}
+
+.weapon-entry button:hover,
+.armor-entry button:hover,
+.shield-entry button:hover {
+    background: #a12828;
+}
+
+/* Hozzáadó gombok az equipment szekciók alatt */
+button[onclick^="addWeapon"],
+button[onclick^="addArmor"],
+button[onclick^="addShield"] {
+    background: #63a384;
+    border: 2px solid #0e400e;
+    color: whitesmoke;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+button[onclick^="addWeapon"]:hover,
+button[onclick^="addArmor"]:hover,
+button[onclick^="addShield"]:hover {
+    background: #3b7458;
+}
+
+/* ==============================
+   Story
+   ============================== */
+
+#story {
+    width: 100%;
+    min-height: 140px;
+    background: #1a1a1a;
+    color: #fff;
+    font-family: "Georgia", serif;
+    font-size: 15px;
+    padding: 12px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    resize: vertical;
+}
+
+#story:focus {
+    border-color: #8a1212;
+    box-shadow: 0 0 6px rgba(138, 18, 18, .7);
+}
+
+/* ==============================
+   Submit gomb
+   ============================== */
+
+button[type="submit"] {
+    display: block;
+    margin: 24px auto 0;
+    background: #670E0E;
+    color: white;
+    padding: 12px 22px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: "Georgia", serif;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background .2s ease, transform .12s ease, box-shadow .2s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,.35);
+}
+
+button[type="submit"]:hover {
+    background: #8a1a1a;
+    transform: translateY(-1px);
+}
+
+button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+/* ==============================
+   Linkek
+   ============================== */
+
+a {
+    color: #91bea8;
+    text-decoration: none;
+    position: relative;
+    transition: color .2s ease;
+}
+
+a:hover {
+    color: #b9d6c6;
+}
+
+a::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: -2px;
+    width: 0%; height: 2px;
+    background: currentColor;
+    transition: width .25s ease;
+}
+
+a:hover::after {
+    width: 100%;
+}
+
+/* ==============================
+   Reszponzivitás
+   ============================== */
+
+@media (max-width: 900px) {
+    .spell-entry {
+        grid-template-columns: repeat(3, minmax(120px, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .spell-entry {
+        grid-template-columns: 1fr;
+    }
+
+    .weapon-entry,
+    .armor-entry,
+    .shield-entry {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .image-option img {
+        width: 90px;
+        height: 90px;
+    }
+}
+
+/* ==============================
+   Preferált csökkentett mozgás
+   ============================== */
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}

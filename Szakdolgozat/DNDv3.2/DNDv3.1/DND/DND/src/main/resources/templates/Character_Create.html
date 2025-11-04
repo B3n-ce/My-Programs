@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Freddy's Dnd: Character Creation</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon-32x32.png">
+    <link rel="stylesheet" href="/React/CharacterCreate/index-CCFinal2.css">
+</head>
+<body>
+<form th:action="@{/create}" method="post">
+
+    <div th:object="${characterDto}">
+
+        <input type="hidden" id="name" th:field="*{name}" />
+        <input type="hidden" id="level" th:field="*{level}" />
+        <input type="hidden" id="race" th:field="*{race}" />
+        <input type="hidden" id="klass" th:field="*{klass}" />
+        <input type="hidden" id="background" th:field="*{background}" />
+        <input type="hidden" id="alignment" th:field="*{alignment}" />
+        <input type="hidden" id="hp" th:field="*{hp}" />
+
+
+        <input type="hidden" id="armor_class" th:field="*{armor_class}" />
+        <input type="hidden" id="hit_dice" th:field="*{hit_dice}" />
+        <input type="hidden" id="initiative" th:field="*{initiative}" />
+        <input type="hidden" id="proficiency_bonus" th:field="*{proficiency_bonus}" />
+        <input type="hidden" id="speed" th:field="*{speed}" />
+
+
+        <input type="hidden" id="strength" th:field="*{strength}" />
+        <input type="hidden" id="dexterity" th:field="*{dexterity}" />
+        <input type="hidden" id="constitution" th:field="*{constitution}" />
+        <input type="hidden" id="intelligence" th:field="*{intelligence}" />
+        <input type="hidden" id="wisdom" th:field="*{wisdom}" />
+        <input type="hidden" id="charisma" th:field="*{charisma}" />
+
+
+        <input type="hidden" id="acrobatics" name="acrobatics" />
+        <input type="hidden" id="acrobatics_p" name="acrobatics_p" />
+
+        <input type="hidden" id="animal_handling" name="animal_handling" />
+        <input type="hidden" id="animal_handling_p" name="animal_handling_p" />
+
+        <input type="hidden" id="arcane" name="arcane" />
+        <input type="hidden" id="arcane_p" name="arcane_p" />
+
+        <input type="hidden" id="athletics" name="athletics" />
+        <input type="hidden" id="athletics_p" name="athletics_p" />
+
+        <input type="hidden" id="deception" name="deception" />
+        <input type="hidden" id="deception_p" name="deception_p" />
+
+        <input type="hidden" id="history" name="history" />
+        <input type="hidden" id="history_p" name="history_p" />
+
+        <input type="hidden" id="insight" name="insight" />
+        <input type="hidden" id="insight_p" name="insight_p" />
+
+        <input type="hidden" id="intimidation" name="intimidation" />
+        <input type="hidden" id="intimidation_p" name="intimidation_p" />
+
+        <input type="hidden" id="investigation" name="investigation" />
+        <input type="hidden" id="investigation_p" name="investigation_p" />
+
+        <input type="hidden" id="medicine" name="medicine" />
+        <input type="hidden" id="medicine_p" name="medicine_p" />
+
+        <input type="hidden" id="nature" name="nature" />
+        <input type="hidden" id="nature_p" name="nature_p" />
+
+        <input type="hidden" id="perception" name="perception" />
+        <input type="hidden" id="perception_p" name="perception_p" />
+
+        <input type="hidden" id="performance" name="performance" />
+        <input type="hidden" id="performance_p" name="performance_p" />
+
+        <input type="hidden" id="persuasion" name="persuasion" />
+        <input type="hidden" id="persuasion_p" name="persuasion_p" />
+
+        <input type="hidden" id="religion" name="religion" />
+        <input type="hidden" id="religion_p" name="religion_p" />
+
+        <input type="hidden" id="sleight_of_hand" name="sleight_of_hand" />
+        <input type="hidden" id="sleight_of_hand_p" name="sleight_of_hand_p" />
+
+        <input type="hidden" id="stealth" name="stealth" />
+        <input type="hidden" id="stealth_p" name="stealth_p" />
+
+        <input type="hidden" id="survival" name="survival" />
+        <input type="hidden" id="survival_p" name="survival_p" />
+
+
+        <input type="hidden" id="st_str" name="str" />
+        <input type="hidden" id="st_str_p" name="str_p" />
+
+        <input type="hidden" id="st_dex" name="dex" />
+        <input type="hidden" id="st_dex_p" name="dex_p" />
+
+        <input type="hidden" id="st_con" name="con" />
+        <input type="hidden" id="st_con_p" name="con_p" />
+
+        <input type="hidden" id="st_int_save"   name="int_save" />
+        <input type="hidden" id="st_int_save_p" name="int_save_p" />
+
+        <input type="hidden" id="st_wis" name="wis" />
+        <input type="hidden" id="st_wis_p" name="wis_p" />
+
+        <input type="hidden" id="st_cha" name="cha" />
+        <input type="hidden" id="st_cha_p" name="cha_p" />
+
+
+        <div th:object="${features_dto}">
+            <input type="hidden" id="feature1" th:field="*{egy}" />
+            <input type="hidden" id="feature2" th:field="*{ketto}" />
+            <input type="hidden" id="feature3" th:field="*{harom}" />
+            <input type="hidden" id="feature4" th:field="*{negy}" />
+            <input type="hidden" id="feature5" th:field="*{ot}" />
+            <input type="hidden" id="feature6" th:field="*{hat}" />
+            <input type="hidden" id="feature7" th:field="*{het}" />
+            <input type="hidden" id="feature8" th:field="*{nyolc}" />
+            <input type="hidden" id="feature9" th:field="*{kilenc}" />
+            <input type="hidden" id="feature10" th:field="*{tiz}" />
+            <input type="hidden" id="feature11" th:field="*{tizenegy}" />
+            <input type="hidden" id="feature12" th:field="*{tizenkette}" />
+            <input type="hidden" id="feature13" th:field="*{tizenharom}" />
+            <input type="hidden" id="feature14" th:field="*{tizennegy}" />
+            <input type="hidden" id="feature15" th:field="*{tizenot}" />
+            <input type="hidden" id="feature16" th:field="*{tizenhat}" />
+            <input type="hidden" id="feature17" th:field="*{tizenhet}" />
+            <input type="hidden" id="feature18" th:field="*{tizennyolc}" />
+            <input type="hidden" id="feature19" th:field="*{tizenkilenc}" />
+            <input type="hidden" id="feature20" th:field="*{husz}" />
+        </div>
+
+        <input type="hidden" id="image_URL" th:field="*{image_URL}" />
+
+        <input type="hidden" id="user" th:field="*{user}" required>
+
+        <input type="hidden" id="story_string" name="story_string" />
+
+        <input type="hidden" id="inventory_string" name="inventory_string" />
+
+    </div>
+
+    <input type="hidden" id="equipment" name="equipment"/>
+
+    <input type="hidden" id="spells" name="spells"/>
+
+    <input type="hidden" id="copper" name="copper"/>
+    <input type="hidden" id="silver" name="silver"/>
+    <input type="hidden" id="gold" name="gold"/>
+    <input type="hidden" id="platinum" name="platinum"/>
+
+    <div id="root"></div>
+
+    <button type="submit" hidden id="hidden-submit">Create Character</button>
+
+</form>
+
+<script th:inline="javascript">
+    window.__CREATE_DATA__ = {
+        existingNames: /*[[${existingNames}]]*/ []
+    };
+</script>
+
+<script defer src="/React/CharacterCreate/index-CCFinal2.js"></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <title>Freddy's DnD: Character Edit</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon-32x32.png" />
+  <link rel="stylesheet" href="/React/Edit/index-EditFinal2.css" />
+</head>
+<body>
+
+<form th:action="@{/edit/{id}(id=${id})}" method="post" id="edit-form">
+
+
+  <input type="hidden" id="name" name="name" th:value="${characterDto.name}" readonly/>
+  <input type="hidden" id="level" name="level" th:value="${characterDto.level}" />
+  <input type="hidden" id="race" name="race" th:value="${characterDto.race}" />
+  <input type="hidden" id="klass" name="klass" th:value="${characterDto.klass}" />
+  <input type="hidden" id="background" name="background" th:value="${characterDto.background}" />
+  <input type="hidden" id="alignment" name="alignment" th:value="${characterDto.alignment}" />
+  <input type="hidden" id="hp" name="hp" th:value="${characterDto.hp}" />
+
+
+  <input type="hidden" id="armor_class" name="armor_class" th:value="${characterDto.armor_class}" />
+  <input type="hidden" id="hit_dice" name="hit_dice" th:value="${characterDto.hit_dice}" />
+  <input type="hidden" id="initiative" name="initiative" th:value="${characterDto.initiative}" />
+  <input type="hidden" id="proficiency_bonus" name="proficiency_bonus" th:value="${characterDto.proficiency_bonus}" />
+  <input type="hidden" id="speed" name="speed" th:value="${characterDto.speed}" />
+
+
+  <input type="hidden" id="strength" name="strength" th:value="${characterDto.strength}" />
+  <input type="hidden" id="dexterity" name="dexterity" th:value="${characterDto.dexterity}" />
+  <input type="hidden" id="constitution" name="constitution" th:value="${characterDto.constitution}" />
+  <input type="hidden" id="intelligence" name="intelligence" th:value="${characterDto.intelligence}" />
+  <input type="hidden" id="wisdom" name="wisdom" th:value="${characterDto.wisdom}" />
+  <input type="hidden" id="charisma" name="charisma" th:value="${characterDto.charisma}" />
+
+
+  <input type="hidden" id="acrobatics" name="acrobatics" />
+  <input type="hidden" id="acrobatics_p" name="acrobatics_p" />
+
+  <input type="hidden" id="animal_handling" name="animal_handling" />
+  <input type="hidden" id="animal_handling_p" name="animal_handling_p" />
+
+  <input type="hidden" id="arcane" name="arcane" />
+  <input type="hidden" id="arcane_p" name="arcane_p" />
+
+  <input type="hidden" id="athletics" name="athletics" />
+  <input type="hidden" id="athletics_p" name="athletics_p" />
+
+  <input type="hidden" id="deception" name="deception" />
+  <input type="hidden" id="deception_p" name="deception_p" />
+
+  <input type="hidden" id="history" name="history" />
+  <input type="hidden" id="history_p" name="history_p" />
+
+  <input type="hidden" id="insight" name="insight" />
+  <input type="hidden" id="insight_p" name="insight_p" />
+
+  <input type="hidden" id="intimidation" name="intimidation" />
+  <input type="hidden" id="intimidation_p" name="intimidation_p" />
+
+  <input type="hidden" id="investigation" name="investigation" />
+  <input type="hidden" id="investigation_p" name="investigation_p" />
+
+  <input type="hidden" id="medicine" name="medicine" />
+  <input type="hidden" id="medicine_p" name="medicine_p" />
+
+  <input type="hidden" id="nature" name="nature" />
+  <input type="hidden" id="nature_p" name="nature_p" />
+
+  <input type="hidden" id="perception" name="perception" />
+  <input type="hidden" id="perception_p" name="perception_p" />
+
+  <input type="hidden" id="performance" name="performance" />
+  <input type="hidden" id="performance_p" name="performance_p" />
+
+  <input type="hidden" id="persuasion" name="persuasion" />
+  <input type="hidden" id="persuasion_p" name="persuasion_p" />
+
+  <input type="hidden" id="religion" name="religion" />
+  <input type="hidden" id="religion_p" name="religion_p" />
+
+  <input type="hidden" id="sleight_of_hand" name="sleight_of_hand" />
+  <input type="hidden" id="sleight_of_hand_p" name="sleight_of_hand_p" />
+
+  <input type="hidden" id="stealth" name="stealth" />
+  <input type="hidden" id="stealth_p" name="stealth_p" />
+
+  <input type="hidden" id="survival" name="survival" />
+  <input type="hidden" id="survival_p" name="survival_p" />
+
+
+  <input type="hidden" id="st_str" name="str" />
+  <input type="hidden" id="st_str_p" name="str_p" />
+
+  <input type="hidden" id="st_dex" name="dex" />
+  <input type="hidden" id="st_dex_p" name="dex_p" />
+
+  <input type="hidden" id="st_con" name="con" />
+  <input type="hidden" id="st_con_p" name="con_p" />
+
+  <input type="hidden" id="st_int_save"   name="int_save" />
+  <input type="hidden" id="st_int_save_p" name="int_save_p" />
+
+  <input type="hidden" id="st_wis" name="wis" />
+  <input type="hidden" id="st_wis_p" name="wis_p" />
+
+  <input type="hidden" id="st_cha" name="cha" />
+  <input type="hidden" id="st_cha_p" name="cha_p" />
+
+
+  <input type="hidden" id="image_URL" name="image_URL" th:value="${characterDto.image_URL}" />
+
+  <input type="hidden" id="user" name="user" th:value="${characterDto.user}" />
+
+  <input type="hidden" id="story" name="story" th:value="${characters_notes_story}" />
+
+  <input type="hidden" id="equipmentJson" name="equipmentJson" />
+
+  <input type="hidden" id="spells" name="spells" />
+
+  <input type="hidden" id="feature1"  name="egy" />
+  <input type="hidden" id="feature2"  name="ketto" />
+  <input type="hidden" id="feature3"  name="harom" />
+  <input type="hidden" id="feature4"  name="negy" />
+  <input type="hidden" id="feature5"  name="ot" />
+  <input type="hidden" id="feature6"  name="hat" />
+  <input type="hidden" id="feature7"  name="het" />
+  <input type="hidden" id="feature8"  name="nyolc" />
+  <input type="hidden" id="feature9"  name="kilenc" />
+  <input type="hidden" id="feature10" name="tiz" />
+  <input type="hidden" id="feature11" name="tizenegy" />
+  <input type="hidden" id="feature12" name="tizenkette" />
+  <input type="hidden" id="feature13" name="tizenharom" />
+  <input type="hidden" id="feature14" name="tizennegy" />
+  <input type="hidden" id="feature15" name="tizenot" />
+  <input type="hidden" id="feature16" name="tizenhat" />
+  <input type="hidden" id="feature17" name="tizenhet" />
+  <input type="hidden" id="feature18" name="tizennyolc" />
+  <input type="hidden" id="feature19" name="tizenkilenc" />
+  <input type="hidden" id="feature20" name="husz" />
+
+  <div id="root"></div>
+
+  <button type="submit" hidden id="hidden-submit">Update Character</button>
+</form>
+
+<script th:inline="javascript">
+  /*<![CDATA[*/
+  window.__EDIT_DATA__ = JSON.parse(/*[[${editDataJson}]]*/ "{}");
+  /*]]>*/
+</script>
+
+<script defer src="/React/Edit/index-EditFinal2.js"></script>
+</body>
+</html>
